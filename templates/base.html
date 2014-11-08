@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>{{ title }}</title>
+  <link rel="stylesheet" href="/static/css/style.css"/>
+  <script src="/static/js/jquery-1.11.1.min.js"></script>
+  {% block head %}
+  {% endblock %}
+</head>
+<body>
+
+  <section class="container" id="container">
+    <div class="login">
+  {% block body %}
+  {% endblock %}
+    </div>
+
+    <div class="login-help">
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          {% for message in messages %}
+            <p>{{ message }}</p>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+      <p id="flash"></p>
+    </div>
+
+
+  </section>
+</body>
+</html>

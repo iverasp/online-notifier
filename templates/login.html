@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block body %}
+      <h1>Login</h1>
+      <form method="post" action="" name="login">
+        {{ form.hidden_tag() }}
+        <p>{{ form.phonenumber(class="app-input", type="text", placeholder="Phone number", required=True) }}</p>
+        <p>{{ form.password(type="password", placeholder="Password") }}</p>
+        <p class="remember_me">
+          <label>
+            {{ form.remember_me }}
+            Remember me
+          </label>
+        </p>
+        <p class="submit"><input type="submit" name="submit" value="Log in"></p>
+      </form>
+    </div>
+
+    <div class="login-help">
+      <p><a href="{{ url_for('reset') }}">Forgot your password?</a> | <a href="{{ url_for('signup') }}">Sign up</a></p>
+    </div>
+
+{% endblock %}

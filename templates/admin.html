@@ -1,0 +1,50 @@
+{% extends "user.html" %}
+
+{% block admin %}
+
+  <div class="admin">
+    <h1>Users</h1>
+    <form method="post" action="" name="delete_users">
+    {% for user in users %}
+    <p id="keypar">
+    <label id="userlabel">
+      <input class="userchk" type="checkbox" name="chk_group_users" value="{{ user.id }}">
+      {{ user.phonenumber }}
+    </label>
+  </p>
+    {% endfor %}
+      {{ delete_form.hidden_tag() }}
+      <p class="submit"><input type="submit" name="submit" value="Delete users"></p>
+    </form>
+
+  </div>
+
+  <div class="admin">
+    <h1>Keys available</h1>
+  {% for key in keys %}
+  <p id="keypar">{{ key.key }}</p>
+  {% endfor %}
+
+    <form method="post" action="{{ url_for('gen_key') }}" name="gen_key">
+      {{ admin_form.hidden_tag() }}
+      <p class="submit"><input type="submit" name="submit" value="Generate key"></p>
+    </form>
+  </div>
+
+  <div class="admin">
+    <h1>SMS history</h1>
+    <table class="sms-table">
+      <tr>
+        {% for sms in smss %}
+        <td>{{ sms.pretty_date() }}</td>
+        <td><tr>
+        <td>To: {{ sms.receiver }}</td>
+        <td>{{ sms.content }}</td>
+      </tr></td>
+        {% endfor %}
+      </tr>
+    </table>
+  </div>
+
+
+{% endblock %}

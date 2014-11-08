@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block head %}
+<script type="text/javascript">
+  $(document).ready(function(){
+    var csrftoken = '{{ csrf_token() }}';
+
+    $("#notify").change(function() {
+      if($(this).is(":checked")) {
+        console.log("checked");
+        $.ajax({
+          url: '',
+          type: 'POST',
+          data: { 'csrf_token': csrftoken, 'enabled': 'y'}
+        })
+        .done(function() {
+          $('#flash').text('Notifications enabled');
+        })
+        .fail(function() {
+          $('#flash').text('Settings change failed!');
+        });
+        } else {
+          $.ajax({
+            url: '',
+            type: 'POST',
+            data: { 'csrf_token': csrftoken }
+
+          })
+          .done(function() {
+            $('#flash').text('Notifications disabled');
+          })
+          .fail(function() {
+            $('#flash').text('Settings change failed!');
+          });
+        }
+      });
+    });
+</script>
+{% endblock %}
+
+{% block body %}
+<div>
+<div>
+    {% if user.admin %}
+    <h1>Hi admin!</h1>
+    {% else %}
+    <h1>Hi user!</h1>
+    {% endif %}
+    <p>Phone number: {{ user.phonenumber }}</p>
+    <p class="enabled">
+      {{ user_form.enabled(checked=user.enabled, id="notify") }} Enable notifications
+    </p>
+    <p id="p_info"></p>
+</div>
+
+    <div>
+      <form method="post" action="/logout" name="logout">
+        {{ logout_form.hidden_tag() }}
+        <p class="submit"><input type="submit" name="submit" value="Log out"></p>
+      </form>
+    </div>
+</div>
+{% block admin %}
+{% endblock %}
+
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block body %}
+
+      <h1>Sign up</h1>
+      {% if signup_form %}
+      <form method="post" action="" name="signup">
+        {{ signup_form.hidden_tag() }}
+        <p>{{ signup_form.phonenumber(class="app-input", type="text", placeholder="Phone number", required=True) }}</p>
+        <p>{{ signup_form.key(class="app-input", type="text", placeholder="Key", required=True) }}</p>
+        <p>{{ signup_form.recaptcha }}</p>
+        <p class="submit"><input type="submit" name="submit" value="Request code"></p>
+      </form>
+      {% endif %}
+
+    {% if verify_form %}
+      <form method="post" action="{{ url_for('verify') }}" name="verify">
+        {{ verify_form.hidden_tag() }}
+        <p>{{ verify_form.verify_key(class="app-input", placeholder="Verification code") }}</p>
+        <p class="submit"><input type="submit" name="submit" value="Verify"></p>
+      </form>
+    {% endif %}
+
+
+    {% if password_form %}
+    <div>
+      <form method="post" action="{{ url_for('create') }}" name="password">
+        {{ password_form.hidden_tag() }}
+        <p>{{ password_form.password(type="password", required=True, placeholder="Password") }}</p>
+        <p>{{ password_form.repeat_password(type="password", required=True, placeholder="Repeat password")}}</p>
+        <p class="submit"><input type="submit" name="submit" value="Register"></p>
+      </form>
+    </div>
+    {% endif %}
+
+  </div>
+  <div>
+
+    <div class="login-help">
+      <p><a href="{{ url_for('reset') }}">Forgot your password?</a> | <a href="{{ url_for('login') }}">Log in</a></p>
+    </div>
+
+    <div class="login-help">
+      {% if signup_form %}
+      {% for error in signup_form.recaptcha.errors %}
+        <p>{{ error }}</p>
+      {% endfor %}
+      {% endif %}
+    </div>
+
+{% endblock %}
