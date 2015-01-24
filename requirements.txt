@@ -1,2 +1,8 @@
+flask
 flask-login
+flask-wtf
+flask-sqlalchemy
 JSON-Datetime
+python-dateutil
+apscheduler
+requests

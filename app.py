@@ -20,7 +20,8 @@ from forms import *
 from talkmoreapi import *
 from models import *
 
-config_file = "%s/.talkmore.json" % os.getenv("HOME")
+#config_file = "%s/.talkmore.json" % os.getenv("HOME")
+config_file = "/home/iw/iwasperu/.talkmore.json"
 config = json.loads(open(config_file, 'r').read())
 phonenumber = config["phonenumber"]
 password = config["password"]
