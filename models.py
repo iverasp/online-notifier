@@ -25,11 +25,18 @@ class Events(db.Model):
     event_id = db.Column(db.Integer, nullable=False)
     name = db.Column(db.String, nullable=False)
     registration_start = db.Column(db.DateTime, nullable=False)
+    notification_sent = db.Column(db.Boolean, nullable=False, default=False)
 
     def __init__(self, event_id, name, registration_start):
         self.event_id = event_id
         self.name = name
         self.registration_start = registration_start
+
+    def pretty_date(self):
+        return unicode(self.registration_start.replace(microsecond=0))
+
+    def __repr__(self):
+        return '<EventID ' + str(self.event_id) + ', Name ' + self.name + ', Reg start ' + str(self.registration_start) + '>'
 
 class Users(db.Model):
     id = db.Column(db.Integer, primary_key=True)

@@ -39,7 +39,7 @@ def main():
     for key, value in events.iteritems():
         lol = s.query(Events).filter(Events.event_id == key)
         print lol
-#            print "hello"
+        print key, value
 
 if __name__=='__main__':
     main()

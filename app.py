@@ -1,9 +1,21 @@
+# -*- coding: utf-8 -*-
+
 from flask import Flask, jsonify, render_template, redirect, url_for, \
     flash, session, request
 from flask.ext.login import LoginManager, login_user , logout_user , \
     current_user , login_required
 from flask.ext.wtf import CsrfProtect
 import random, string, json, os
+from time import time, strftime
+from dateutil.parser import parse
+from datetime import timedelta
+
+import json
+import urllib2
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.executors.pool import ProcessPoolExecutor
+import logging
+
 from forms import *
 from talkmoreapi import *
 from models import *
@@ -22,6 +34,18 @@ CsrfProtect(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+
+scheduler = BackgroundScheduler()
+executors = {
+    'default': {'type': 'threadpool', 'max_workers': 20},
+    'processpool': ProcessPoolExecutor(max_workers=5)
+}
+scheduler.configure(executors=executors)
+
+logging.basicConfig()
+
+NOTIFY_MINUTES = 10
+SERVER_RUN_HOUR = 3
 
 @login_manager.user_loader
 def load_user(id):
@@ -57,6 +81,11 @@ def index():
                                 users=Users.query.all(),
                                 keys=BetaKeys.query.all(),
                                 smss=SMS.query.order_by(SMS.date.desc()).all(),
+                                events=Events.query.order_by(
+                                    Events.registration_start.asc()
+                                ).filter_by(
+                                    notification_sent=False
+                                ).all(),
                                 user_form=user_form,
                                 logout_form=logout_form,
                                 admin_form=admin_form,
@@ -64,6 +93,11 @@ def index():
     return render_template('user.html',
                             title='Hi user',
                             user=current_user,
+                            events=Events.query.order_by(
+                                Events.registration_start.asc()
+                            ).filter_by(
+                                notification_sent=False
+                            ).all(),
                             user_form=user_form,
                             logout_form=logout_form)
 
@@ -263,5 +297,88 @@ def send_sms(phonenumber, message):
     db.session.add(sms)
     db.session.commit()
 
+def send_smss(phonenumbers, message):
+    for phonenumber in phonenumbers:
+        send_sms(phonenumber, message)
+
+def generate_smss(event):
+    with app.app_context():
+        users = Users.query.filter_by(enabled=True).all()
+        message = u'Påmelding til ' + event.name + ' starter ' + str(event.registration_start)
+        send_smss([user.phonenumber for user in users], message)
+        event.notification_sent = True
+        db.session.commit()
+
+def scrape():
+    response = urllib2.urlopen(
+        'https://online.ntnu.no/api/v0/events/?event_end__gte='
+        + strftime('%Y-%m-%d')
+        + '&order_by=event_start&limit=10&format=json'
+    )
+    data = json.load(response)
+    events = {}
+    for d in data['events']:
+        if d['attendance_event'] is not None:
+            events[int(d['id'])] = {
+                'name': d['title'],
+                'reg_start': d['attendance_event']['registration_start']
+            }
+    for key, value in events.iteritems():
+        with app.app_context(): # needed for threading
+            lol = Events.query.filter_by(event_id=key).first()
+            if lol: print lol
+            if not lol:
+                event = Events(
+                    event_id = key,
+                    name = value['name'],
+                    registration_start = parse(value['reg_start'])
+                )
+                db.session.add(event)
+                db.session.commit()
+                print 'added event with id', key
+
+def schedule_today():
+    with app.app_context():
+        events = Events.query.filter_by(
+            notification_sent=False
+        ).all()
+    for event in events:
+        if event.registration_start.date() == datetime.now().date():
+            print event
+            run_date = event.registration_start \
+                - timedelta(minutes=NOTIFY_MINUTES)
+            scheduler.add_job(
+                generate_smss,
+                'date',
+                run_date=run_date,
+                args=[event]
+            )
+            scheduler.print_jobs()
+
+def server():
+    scrape()
+    schedule_today()
+    # add new job for tomorrow
+    run_date = datetime.now()
+    run_date += timedelta(days=1)
+    run_date = run_date.replace(
+        hour=SERVER_RUN_HOUR,
+        minute=0,
+        second=0,
+        microsecond=0
+    )
+    scheduler.add_job(
+        server,
+        'date',
+        run_date=run_date
+    )
+    scheduler.print_jobs()
+
 if __name__=='__main__':
-    app.run(debug=True)
+    #with app.app_context():
+        #generate_key()
+    scheduler.add_job(server, 'date', run_date=datetime.now())
+    scheduler.start()
+    scheduler.print_jobs()
+    scheduler.daemonic=False
+    app.run(debug=False)

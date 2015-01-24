@@ -40,7 +40,7 @@
 
 {% block body %}
 <div>
-<div>
+  <div>
     {% if user.admin %}
     <h1>Hi admin!</h1>
     {% else %}
@@ -51,7 +51,7 @@
       {{ user_form.enabled(checked=user.enabled, id="notify") }} Enable notifications
     </p>
     <p id="p_info"></p>
-</div>
+  </div>
 
     <div>
       <form method="post" action="/logout" name="logout">
@@ -59,7 +59,22 @@
         <p class="submit"><input type="submit" name="submit" value="Log out"></p>
       </form>
     </div>
-</div>
+  </div>
+
+  <div class="admin">
+    <h1>Upcoming events</h1>
+    <table class="events-table">
+      <tr>
+        {% for event in events %}
+        <td><strong>{{ event.pretty_date() }}</strong></td>
+        <td><tr>
+          <td>{{ event.name }}</td>
+        </tr></td>
+        {% endfor %}
+      </tr>
+    </table>
+  </div>
+
 {% block admin %}
 {% endblock %}
 
