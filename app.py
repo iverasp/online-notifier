@@ -360,7 +360,6 @@ def schedule_today():
                 run_date=datetime.now(),
                 args=[event]
             )
-            scheduler.print_jobs()
 
 def server():
     scrape()
@@ -379,14 +378,12 @@ def server():
         'date',
         run_date=run_date
     )
-    scheduler.print_jobs()
 
 def start_app():
     scheduler.add_job(server, 'date', run_date=datetime.now())
     scheduler.start()
-    scheduler.print_jobs()
     scheduler.daemonic=False
 
 if __name__=='__main__':
     start_app()
-    app.run(debug=False)
+    app.run(debug=True)
