@@ -43,7 +43,7 @@ executors = {
 scheduler.configure(executors=executors)
 
 logging.basicConfig(
-    filename='online-notifier.log',
+    filename=LOGFILE_LOCATION,
     level=logging.DEBUG
 )
 
