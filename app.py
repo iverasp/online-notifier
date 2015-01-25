@@ -315,7 +315,7 @@ def generate_smss(event):
     with app.app_context():
         users = Users.query.filter_by(enabled=True).all()
         message = u'Paamelding til ' + event.name + ' starter ' + str(event.registration_start)
-        #send_smss([user.phonenumber for user in users], message)
+        send_smss([user.phonenumber for user in users], message)
         mark_event_as_notified(event)
 
 def scrape():
@@ -356,8 +356,7 @@ def schedule_today():
             scheduler.add_job(
                 generate_smss,
                 'date',
-                #run_date=run_date,
-                run_date=datetime.now(),
+                run_date=run_date,
                 args=[event]
             )
 
