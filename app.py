@@ -381,7 +381,6 @@ def start_app():
     scheduler.print_jobs()
     scheduler.daemonic=False
 
-start_app()
-
 if __name__=='__main__':
+    start_app()
     app.run(debug=False)
