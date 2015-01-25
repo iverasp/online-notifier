@@ -307,8 +307,13 @@ def generate_smss(event):
         users = Users.query.filter_by(enabled=True).all()
         message = u'Paamelding til ' + event.name + ' starter ' + str(event.registration_start)
         send_smss([user.phonenumber for user in users], message)
-        event.notification_sent = True
-        db.session.commit()
+        mark_event_as_notified(event)
+
+def mark_event_as_notified(event):
+    db.session.expunge_all() # prevent DetachedInstanceError
+    event.notification_sent = True
+    db.session.commit()
+    db.session.close()
 
 def scrape():
     response = urllib2.urlopen(
