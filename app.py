@@ -19,13 +19,12 @@ import logging
 from forms import *
 from talkmoreapi import *
 from models import *
+from local_settings import *
 
-#config_file = "%s/.talkmore.json" % os.getenv("HOME")
-config_file = "/home/iw/iwasperu/.talkmore.json"
-config = json.loads(open(config_file, 'r').read())
-phonenumber = config["phonenumber"]
-password = config["password"]
-t = TalkmoreAPI(phonenumber, password)
+sms_config = json.loads(open(TALKMORE_CRED_LOCATION, 'r').read())
+sms_phonenumber = sms_config["phonenumber"]
+sms_password = sms_config["password"]
+t = TalkmoreAPI(sms_phonenumber, sms_password)
 random.seed()
 
 app = Flask(__name__)
@@ -47,6 +46,7 @@ logging.basicConfig()
 
 NOTIFY_MINUTES = 10
 SERVER_RUN_HOUR = 3
+
 
 @login_manager.user_loader
 def load_user(id):
@@ -305,7 +305,7 @@ def send_smss(phonenumbers, message):
 def generate_smss(event):
     with app.app_context():
         users = Users.query.filter_by(enabled=True).all()
-        message = u'Påmelding til ' + event.name + ' starter ' + str(event.registration_start)
+        message = u'Paamelding til ' + event.name + ' starter ' + str(event.registration_start)
         send_smss([user.phonenumber for user in users], message)
         event.notification_sent = True
         db.session.commit()
@@ -375,11 +375,13 @@ def server():
     )
     scheduler.print_jobs()
 
-if __name__=='__main__':
-    #with app.app_context():
-        #generate_key()
+def start_app():
     scheduler.add_job(server, 'date', run_date=datetime.now())
     scheduler.start()
     scheduler.print_jobs()
     scheduler.daemonic=False
+
+start_app()
+
+if __name__=='__main__':
     app.run(debug=False)
