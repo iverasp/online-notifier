@@ -42,11 +42,13 @@ executors = {
 }
 scheduler.configure(executors=executors)
 
-logging.basicConfig()
+logging.basicConfig(
+    filename='online-notifier.log',
+    level=logging.DEBUG
+)
 
 NOTIFY_MINUTES = 10
 SERVER_RUN_HOUR = 3
-
 
 @login_manager.user_loader
 def load_user(id):
@@ -81,7 +83,9 @@ def index():
                                 user=current_user,
                                 users=Users.query.all(),
                                 keys=BetaKeys.query.all(),
-                                smss=SMS.query.order_by(SMS.date.desc()).all(),
+                                smss=SMS.query.order_by(
+                                    SMS.date.desc()
+                                ).limit(10),
                                 events=Events.query.order_by(
                                     Events.registration_start.asc()
                                 ).filter_by(
@@ -153,8 +157,6 @@ def signup():
                                 title='Sign up',
                                 signup_form=signup_form,
                                 verify_form=verify_form)
-        print(session['verify_key'])
-
     return render_template('signup.html',
                             title='Sign up',
                             signup_form=signup_form)
@@ -302,18 +304,19 @@ def send_smss(phonenumbers, message):
     for phonenumber in phonenumbers:
         send_sms(phonenumber, message)
 
+def mark_event_as_notified(event):
+    event.notification_sent=True
+    # ugly hack because of threading
+    db.session.delete(event)
+    db.session.add(event)
+    db.session.commit()
+
 def generate_smss(event):
     with app.app_context():
         users = Users.query.filter_by(enabled=True).all()
         message = u'Paamelding til ' + event.name + ' starter ' + str(event.registration_start)
-        send_smss([user.phonenumber for user in users], message)
+        #send_smss([user.phonenumber for user in users], message)
         mark_event_as_notified(event)
-
-def mark_event_as_notified(event):
-    db.session.expunge_all() # prevent DetachedInstanceError
-    event.notification_sent = True
-    db.session.commit()
-    db.session.close()
 
 def scrape():
     response = urllib2.urlopen(
@@ -332,7 +335,6 @@ def scrape():
     for key, value in events.iteritems():
         with app.app_context(): # needed for threading
             lol = Events.query.filter_by(event_id=key).first()
-            if lol: print lol
             if not lol:
                 event = Events(
                     event_id = key,
@@ -341,7 +343,6 @@ def scrape():
                 )
                 db.session.add(event)
                 db.session.commit()
-                print 'added event with id', key
 
 def schedule_today():
     with app.app_context():
@@ -350,13 +351,13 @@ def schedule_today():
         ).all()
     for event in events:
         if event.registration_start.date() == datetime.now().date():
-            print event
             run_date = event.registration_start \
                 - timedelta(minutes=NOTIFY_MINUTES)
             scheduler.add_job(
                 generate_smss,
                 'date',
-                run_date=run_date,
+                #run_date=run_date,
+                run_date=datetime.now(),
                 args=[event]
             )
             scheduler.print_jobs()

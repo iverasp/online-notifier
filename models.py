@@ -36,7 +36,7 @@ class Events(db.Model):
         return unicode(self.registration_start.replace(microsecond=0))
 
     def __repr__(self):
-        return '<EventID ' + str(self.event_id) + ', Name ' + self.name + ', Reg start ' + str(self.registration_start) + '>'
+        return '<EventID ' + str(self.event_id) + ', Name ' + self.name + ', Reg start ' + str(self.registration_start) + ', Notified ' + str(self.notification_sent) + '>'
 
 class Users(db.Model):
     id = db.Column(db.Integer, primary_key=True)
